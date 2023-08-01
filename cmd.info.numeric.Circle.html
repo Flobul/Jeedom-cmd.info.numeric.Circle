@@ -1,0 +1,144 @@
+<div class="cmd cmd-widget" data-type="info" data-subtype="string" data-template="default" data-cmd_id="#id#" data-cmd_uid="#uid#" data-version="#version#" data-eqLogic_id="#eqLogic_id#" style="display:inline-block;">
+  <div class="title #hide_name#">
+    <div class="cmdName">#name_display#</div>
+  </div>
+  <div class="progress-variable">
+    <div class="progress-pie-chart">
+      <div class="progress">
+        <div class="progress-fill"></div>
+      </div>
+      <div class="percents">
+        <div class="percents-wrapper">
+          <span class="percents-wrapper-valeur"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+    .progress-variable div{
+      --color-bg: #E7EEF7;
+      --color-bg-progress: #E5E5E5;
+      --color-progress: #81CE97;
+      --color-texte: #81CE97;
+    }
+
+    .progress-pie-chart {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background-color: var(--color-bg-progress);
+      position: relative;
+    }
+
+    .progress-pie-chart.gt-50 {
+      background-color: var(--color-progress);
+    }
+
+    .progress {
+      content: "";
+      position: absolute;
+      background-color: var(--color-bg-progress);
+      border-radius: 50%;
+      left: calc(50% - 50px);
+      top: calc(50% - 50px);
+      width: 100px;
+      height: 100px;
+      clip-path: polygon(50% 0%, 100% 0%, 100% 100%, 50% 100%);
+    }
+
+    .progress .progress-fill {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      left: calc(50% - 50px);
+      top: calc(50% - 50px);
+      width: 100px;
+      height: 100px;
+      clip-path: polygon(50% 0%, 0% 0%, 0% 100%, 50% 100%);
+      background: var(--color-progress);
+    }
+
+    .gt-50 .progress {
+      clip-path: polygon(50% 0%, 0% 0%, 0% 100%, 50% 100%);
+    }
+
+    .gt-50 .progress .progress-fill {
+      clip-path: polygon(50% 0%, 100% 0%, 100% 100%, 50% 100%);
+      background: var(--color-bg-progress);
+    }
+
+    .percents {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      left: calc(50% - 83.9130434783px/2);
+      top: calc(50% - 83.9130434783px/2);
+      width: 83.9130434783px;
+      height: 83.9130434783px;
+      background: var(--color-bg);
+      text-align: center;
+      display: table;
+    }
+
+    .percents-wrapper {
+      display: grid;
+      position: absolute;
+      top: 35px;
+      height: 80%;
+      width: 100%;
+      font-size: 1.6em;
+      font-weight: bold;
+      grid-template-columns: 100%;
+      grid-template-rows: auto auto;
+    }
+
+    .percents-wrapper span:nth-child(1) {
+      color: var(--color-texte);
+    }
+  
+    .percents-wrapper-valeur:hover {
+      font-size: 1.5em;
+      transition-duration: .1s;
+    }
+
+</style>
+<template>
+  <div>
+    <div>scale : {{Taille du widget. 1 = 100%, inférieur à 1 on réduit la taille et supérieur à 1 on augmente la taille.}}</div>
+    <div>borne_min_valeur : {{La valeur minimale sur laquelle sera basée le calcul de pourcentage.}}</div>
+    <div>borne_max_valeur : {{La valeur maximale sur laquelle sera basée le calcul de pourcentage.}}</div>
+  </div>
+</template>
+<script>
+    jeedom.cmd.addUpdateFunction('#id#',function(_options) {
+
+      const borne_min_valeur = parseFloat('#borne_min_valeur#') || 0;
+      const borne_max_valeur = parseFloat('#borne_max_valeur#') || 100;
+
+      var valeur = _options.display_value.split(',');
+      let cmd = document.querySelector('.cmd[data-cmd_id="#id#"]');
+
+      var percents = Math.round((valeur[0] - borne_min_valeur) / (borne_max_valeur - borne_min_valeur) * 100);
+      var deg1 = 360 * percents / 100;
+
+      if (percents > 50) {
+          cmd.querySelector('.progress-pie-chart').classList.add('gt-50');
+      }
+      cmd.setAttribute('title', '{{Date de valeur}} : '+_options.valueDate+'<br/>{{Date de collecte}} : '+_options.collectDate);
+
+      cmd.querySelector('.progress-fill').style.transform = 'rotate(' + deg1 + 'deg)';
+      cmd.querySelector('.percents-wrapper-valeur').textContent = valeur[0] + _options.unit;
+
+    });
+
+    if (is_numeric('#state#')) {
+      jeedom.cmd.refreshValue([{cmd_id:'#id#', value: '#value#', display_value: '#state#', valueDate: '#valueDate#', collectDate: '#collectDate#', alertLevel: '#alertLevel#', unit: '#unite#'}])
+    } else {
+      document.querySelector('.cmd[data-cmd_id="#id#"]').querySelector('.percents-wrapper-valeur').textContent = '<center><span class="label label-danger">#state#</span></center>';
+    }
+    
+    if ($.issetWidgetOptParam('#scale#', 'scale')) {
+      document.querySelector('.cmd[data-cmd_id="#id#"] .progress-variable').style.transform = 'scale(#scale#)';
+    }
+</script>
